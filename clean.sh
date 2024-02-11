@@ -8,3 +8,7 @@ rm -rf ~/.tmux.conf
 
 # Remove Zsh Configuration #
 rm -rf ~/.zshrc
+
+# Remove Tmux Session Script #
+rm -rf /usr/local/bin/tmux-session
+

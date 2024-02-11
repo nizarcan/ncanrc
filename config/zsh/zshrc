@@ -97,7 +97,7 @@ source $ZSH/oh-my-zsh.sh
 # For a full list of active aliases, run `alias`.
 #
 # Example aliases
-bindkey -s '^f' 'ft^M'
+bindkey -s '^f' 'tmux-session^M'
 bindkey -s '^v' 'source venv/bin/activate^M'
 
 export PATH="$HOME/go/bin:$PATH" 
