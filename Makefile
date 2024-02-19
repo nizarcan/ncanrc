@@ -4,6 +4,9 @@ sym:
 brew:
 	./brew.sh
 
+install:
+	./install.sh
+
 clean:
 	./clean.sh
 
