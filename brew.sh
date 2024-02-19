@@ -29,6 +29,7 @@ brew install ripgrep
 brew install jq
 brew install neovim
 brew install tmux
+brew install httpie
 
 # Apps #
 brew install --cask alacritty
