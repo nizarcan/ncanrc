@@ -23,3 +23,10 @@ else
     echo "Tmux config backup not found"
 fi
 
+# Alacritty config
+if [ -f ~/.config/alacritty/alacritty.toml.bak ]; then
+    cp ~/.config/alacritty/alacritty.toml.bak ~/.config/alacritty/alacritty.toml
+else
+    echo "Alacritty config backup not found"
+fi
+

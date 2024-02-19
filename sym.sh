@@ -21,6 +21,13 @@ else
     ln -s $(pwd)/config/zsh/zshrc ~/.zshrc
 fi
 
+# Symlink Alacritty Config #
+if test -f ~/.config/alacritty/alacritty.toml; then
+    echo "Alacritty Configuration Exists, Not Creating Symlink"
+else
+    ln -s $(pwd)/config/alacritty/alacritty.toml ~/.config/alacritty/alacritty.toml
+fi
+
 # Symlink Tmux Session Script #
 if test -f /usr/local/bin/tmux-session; then
     echo "Tmux Session Script Exists, Not Creating Symlink"

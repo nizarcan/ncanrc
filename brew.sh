@@ -31,7 +31,7 @@ brew install neovim
 brew install tmux
 
 # Apps #
-brew install --cask iterm2
+brew install --cask alacritty
 brew install --cask notion
 brew install --cask raycast
 brew install --cask slack
