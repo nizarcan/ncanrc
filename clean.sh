@@ -10,7 +10,7 @@ rm -rf ~/.tmux.conf
 rm -rf ~/.zshrc
 
 # Remove Alacritty Configuration #
-rm -rf ~/.config/alacritty/alacritty.toml
+rm -rf ~/.config/alacritty
 
 # Remove Tmux Session Script #
 rm -rf /usr/local/bin/tmux-session

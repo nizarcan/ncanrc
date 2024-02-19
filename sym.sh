@@ -25,7 +25,7 @@ fi
 if test -f ~/.config/alacritty/alacritty.toml; then
     echo "Alacritty Configuration Exists, Not Creating Symlink"
 else
-    ln -s $(pwd)/config/alacritty/alacritty.toml ~/.config/alacritty/alacritty.toml
+    ln -s $(pwd)/config/alacritty ~/.config/alacritty
 fi
 
 # Symlink Tmux Session Script #

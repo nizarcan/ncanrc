@@ -25,7 +25,7 @@ fi
 
 # Alacritty config
 if [ -f ~/.config/alacritty/alacritty.toml.bak ]; then
-    rm ~/.config/alacritty/alacritty.toml.bak
+    rm ~/.config/alacritty.bak
 else
     echo "Alacritty config backup not found"
 fi
