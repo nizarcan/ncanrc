@@ -14,5 +14,11 @@ opacity = 0.94
 blur = true
 
 [window.padding]
-x = 20
-y = 20
+x = 14
+y = 14
+
+[keyboard]
+bindings = [
+  { key = "Right", mods = "Alt", chars = "\u001BF" },
+  { key = "Left",  mods = "Alt", chars = "\u001BB" },
+]
