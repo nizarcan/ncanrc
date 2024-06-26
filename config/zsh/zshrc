@@ -100,7 +100,7 @@ source $ZSH/oh-my-zsh.sh
 # alias pgrep='pgrep -f'
 
 bindkey -s '^f' 'tmux-session^M'
-bindkey -s '^v' 'source venv/bin/activate^M'
+bindkey -s '^v' 'source .venv/bin/activate^M'
 
 export PATH="$HOME/go/bin:$PATH" 
 alias python="python3"
@@ -114,4 +114,4 @@ if [ $(arch) = "i386" ]; then
  alias vim="nvim"
 fi
 
-
+source ~/Projects/personal/ncanrc/bin/adjust/adjust.sh
