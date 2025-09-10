@@ -1,6 +1,9 @@
 [submodule "config/nvim"]
 	path = config/nvim
 	url = git@github.com:nizarcan/neovimrc.git
-[submodule "bin/adjust"]
-	path = bin/adjust
-	url = git@github.com:nizarcan/adjust-bin.git
+[submodule "utilities/work"]
+	path = utilities/work
+	url = git@github.com:nizarcan/work-util.git
+[submodule "utilities/personal"]
+	path = utilities/personal
+	url = git@github.com:nizarcan/personal-util.git

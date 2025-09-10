@@ -1,0 +1,30 @@
+font-size = 14
+font-family = jetbrains-mono-nerd-font
+
+cursor-style = block
+cursor-style-blink = false
+
+shell-integration-features = no-cursor
+
+quit-after-last-window-closed = true
+custom-shader-animation = true
+clipboard-read = allow
+clipboard-write = allow
+window-padding-color = background
+
+confirm-close-surface = false
+clipboard-paste-protection = false
+unfocused-split-opacity = 0.8
+
+window-theme = ghostty
+gtk-titlebar = false
+
+macos-titlebar-proxy-icon = hidden
+macos-titlebar-style = transparent
+
+macos-icon = custom-style
+macos-icon-frame = beige
+macos-icon-ghost-color = efbcd5
+macos-icon-screen-color = 403f4c 
+
+theme = NvimDark

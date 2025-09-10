@@ -15,13 +15,30 @@ The `ncanrc` repository holds various configuration files and scripts used for s
 
 ## Usage
 
-The repository contains various scripts and configuration files that can be utilized to customize your environment. Here are some common tasks and how to use them:
+Use the `run.sh` script to manage your dotfiles and environment setup:
 
-- `brew.sh`: This script is used to install Homebrew packages.
-- `clean.sh`: It cleans up config files and directories.
-- `sym.sh`: Creates symbolic links for configuration files.
-- `bin`: Contains utility scripts like `tmux-session.sh`.
-- `config`: Holds configuration files for different tools such as `neovim`, `tmux`, and `zsh`.
+```bash
+./run.sh <command>
+```
+
+### Available Commands
+
+- `./run.sh sym` - Create symlinks for configurations
+- `./run.sh brew` - Install Homebrew and CLI packages (server-friendly)
+- `./run.sh brew --with-casks` - Install Homebrew with GUI applications  
+- `./run.sh install` - Install Oh My Zsh
+- `./run.sh clean` - Remove all configurations
+- `./run.sh backup` - Backup current configurations
+- `./run.sh clear_backup` - Remove backup files
+- `./run.sh load_backup` - Restore configurations from backup
+- `./run.sh help` - Show help message
+
+### Directory Structure
+
+- `scripts/`: Contains management scripts (`backup.sh`, `brew.sh`, `clean.sh`, `sym.sh`, etc.)
+- `utilities/`: Contains utility scripts like `tmux-session.sh` that get linked to system paths
+- `config/`: Holds configuration files for different tools such as `neovim`, `tmux`, and `zsh`
+- `run.sh`: Main script that provides unified interface to all functionality
 
 ## Contributing
 
