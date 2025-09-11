@@ -17,6 +17,7 @@ usage() {
     echo -e "${BLUE}ncanrc - Dotfiles Management${NC}"
     echo ""
     echo "Usage: $0 <command>"
+    clear
     echo ""
     echo "Commands:"
     echo -e "  ${GREEN}sym${NC}           - Create symlinks for configurations"

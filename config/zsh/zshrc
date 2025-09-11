@@ -45,6 +45,9 @@ export LC_ALL=en_US.UTF-8
 # Go
 export PATH="$HOME/go/bin:$PATH"
 
+# Local binaries
+export PATH="$HOME/.local/bin:$PATH"
+
 if [[ "$PLATFORM" == "macos" ]]; then
     export HOMEBREW_PREFIX="/opt/homebrew"
     
@@ -67,7 +70,7 @@ elif [[ "$PLATFORM" == "linux" ]]; then
         export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
     fi
     
-    export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+    export PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
     
     if [[ -n "$HOMEBREW_PREFIX" ]]; then
         if [[ -d "$HOMEBREW_PREFIX/opt/ruby/bin" ]]; then
