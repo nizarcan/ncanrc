@@ -5,3 +5,46 @@
 	autoSetupRemote = true
 [alias]
 	logbetween = log --pretty=format:\"%h %ar %an %s\"
+	
+	# Quick shortcuts
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+	unstage = reset HEAD --
+	last = log -1 HEAD
+	
+	# Enhanced logging
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	lol = log --graph --decorate --pretty=oneline --abbrev-commit
+	lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+	
+	# Show changes
+	changed = show --pretty=\"format:\" --name-only
+	
+	# Interactive rebase
+	rb = rebase -i
+	
+	# Quick amend
+	amend = commit --amend --no-edit
+	
+	# Show ignored files
+	ignored = ls-files --others --ignored --exclude-standard
+	
+	# Undo last commit but keep changes
+	undo = reset --soft HEAD^
+	
+	# Show branches sorted by date
+	recent = branch --sort=-committerdate
+	
+	# Clean up merged branches
+	cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop\\|production' | xargs -n 1 git branch -d"
+	
+	# Find commits by message
+	find = "!git log --pretty=\"format:%Cgreen%H %Cblue%s\" --name-status --grep"
+	
+	# Show file history
+	filelog = log -u
+	
+	# Show word diff
+	wdiff = diff --color-words
