@@ -1,0 +1,7 @@
+[user]
+	name = Nizar Can
+	email = 53255039+nizarcan@users.noreply.github.com
+[push]
+	autoSetupRemote = true
+[alias]
+	logbetween = log --pretty=format:\"%h %ar %an %s\"

@@ -57,6 +57,7 @@ create_symlink "$(pwd)/config/tmux/tmux.conf" "$HOME/.tmux.conf" "Tmux" "file"
 create_symlink "$(pwd)/config/zsh/zshrc" "$HOME/.zshrc" "Zsh" "file"
 create_symlink "$(pwd)/config/alacritty" "$HOME/.config/alacritty" "Alacritty" "dir"
 create_symlink "$(pwd)/config/ghostty" "$HOME/.config/ghostty" "Ghostty" "dir"
+create_symlink "$(pwd)/config/git/gitconfig" "$HOME/.gitconfig" "Git" "file"
 
 # Utility script symlinks
 create_utility_symlink "$(pwd)/utilities/tmux/tmux-session.sh" "/usr/local/bin/tmux-session" "Tmux session script"
