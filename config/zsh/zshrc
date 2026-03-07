@@ -121,8 +121,8 @@ alias vim="nvim" # since I don't know how to exit vim, I use nvim instead
 # Optional configurations
 # ====================================
 DOTFILES_DIR="$HOME/projects/personal/ncanrc"
-[[ -f "$DOTFILES_DIR/utilities/work/work.sh" ]] && source "$DOTFILES_DIR/utilities/work/work.sh"
 [[ -f "$DOTFILES_DIR/utilities/personal/personal.sh" ]] && source "$DOTFILES_DIR/utilities/personal/personal.sh"
+[[ -f "$DOTFILES_DIR/utilities/work/work.sh" ]] && source "$DOTFILES_DIR/utilities/work/work.sh"
 
 # ====================================
 # Performance optimizations
