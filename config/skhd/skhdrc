@@ -8,12 +8,13 @@
 # ============================================
 # App Launchers (hyper = cmd + alt + ctrl + shift)
 # ============================================
-cmd + alt - return : open -na "Ghostty"
+cmd + alt - g : open -a "Ghostty"
 cmd + alt - b : open -a "Arc"
 cmd + alt - s : open -a "Slack"
 cmd + alt - f : open -a "Finder"
 cmd + alt - n : open -a "Obsidian"
 cmd + alt - m : open -a "Spotify"
+cmd + alt - z : open -a "Zed"
 
 # ============================================
 # Quick Utilities
