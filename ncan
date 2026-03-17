@@ -1,0 +1,439 @@
+#!/bin/bash
+set -eo pipefail
+
+# ── Resolve ncan directory (works regardless of where script is invoked) ──
+NCAN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+
+# ── Colors ────────────────────────────────────────────────────────────────
+R='\033[0;31m' G='\033[0;32m' Y='\033[1;33m'
+C='\033[0;36m' D='\033[0;90m' W='\033[1;37m' N='\033[0m'
+
+ok()   { printf "  ${G}✓${N} %b\n" "$1"; }
+skip() { printf "  ${D}·${N} %b\n" "$1"; }
+warn() { printf "  ${Y}!${N} %b\n" "$1"; }
+err()  { printf "  ${R}✗${N} %b\n" "$1"; }
+die()  { err "$1"; exit 1; }
+hdr()  { printf "\n  ${W}%s${N}\n" "$1"; }
+
+# ── App Registry ──────────────────────────────────────────────────────────
+# id|display|source_relative|target|type
+APPS=(
+  "nvim|Neovim|config/nvim|$HOME/.config/nvim|dir"
+  "tmux|Tmux|config/tmux/tmux.conf|$HOME/.tmux.conf|file"
+  "zsh|Zsh|config/zsh/zshrc|$HOME/.zshrc|file"
+  "alacritty|Alacritty|config/alacritty|$HOME/.config/alacritty|dir"
+  "ghostty|Ghostty|config/ghostty|$HOME/.config/ghostty|dir"
+  "git|Git|config/git/gitconfig|$HOME/.gitconfig|file"
+  "aerospace|Aerospace|config/aerospace/aerospace.toml|$HOME/.aerospace.toml|file"
+  "sketchybar|SketchyBar|config/sketchybar|$HOME/.config/sketchybar|dir"
+  "skhd|skhd|config/skhd/skhdrc|$HOME/.skhdrc|file"
+)
+
+UTILS=(
+  "tmux-session|tmux-session|utilities/tmux/tmux-session.sh|/usr/local/bin/tmux-session|file"
+)
+
+# cmd|display  — used by `status` and `brew.sh`
+DEPS=(
+  "brew|homebrew"
+  "nvim|neovim"
+  "tmux|tmux"
+  "fzf|fzf"
+  "rg|ripgrep"
+  "jq|jq"
+  "node|node"
+  "go|go"
+  "git|git"
+  "difft|difftastic"
+  "python3|python"
+  "rustc|rust"
+  "tsc|typescript"
+  "http|httpie"
+  "tree|tree"
+  "bun|bun"
+)
+
+# process_name|display  — used by `status`
+SERVICES=(
+  "sketchybar|sketchybar"
+  "skhd|skhd"
+  "AeroSpace|aerospace"
+)
+
+# ── Registry helpers ──────────────────────────────────────────────────────
+_id()   { echo "${1%%|*}"; }
+_name() { echo "$1" | cut -d'|' -f2; }
+_src()  { echo "$NCAN_DIR/$(echo "$1" | cut -d'|' -f3)"; }
+_tgt()  { echo "$1" | cut -d'|' -f4; }
+_type() { echo "$1" | cut -d'|' -f5; }
+_bak()  { echo "$(_tgt "$1").bak"; }
+
+# Resolve a path to its physical (case-correct) form
+_realpath() {
+  local p="$1"
+  if [[ -d "$p" ]]; then
+    (cd "$p" && pwd -P)
+  elif [[ -e "$p" || -L "$p" ]]; then
+    local dir base
+    dir=$(cd "$(dirname "$p")" 2>/dev/null && pwd -P)
+    base=$(basename "$p")
+    echo "$dir/$base"
+  else
+    echo "$p"
+  fi
+}
+
+# Compare two paths accounting for case-insensitive filesystems
+_same_path() {
+  [[ "$(_realpath "$1")" == "$(_realpath "$2")" ]]
+}
+
+_each() {
+  local filter="$1" callback="$2"
+  shift 2
+  local found=false
+
+  for entry in "${APPS[@]}"; do
+    if [[ -z "$filter" || "$(_id "$entry")" == "$filter" ]]; then
+      found=true
+      "$callback" "$entry" "$@"
+    fi
+  done
+
+  if [[ -n "$filter" && "$found" == false ]]; then
+    err "Unknown app: ${W}$filter${N}"
+    printf "  Available:"
+    for entry in "${APPS[@]}"; do printf " ${C}%s${N}" "$(_id "$entry")"; done
+    echo ""
+    return 1
+  fi
+}
+
+# ── Link ──────────────────────────────────────────────────────────────────
+
+_link_one() {
+  local entry="$1" force="${2:-false}"
+  local id name src tgt
+  id=$(_id "$entry") name=$(_name "$entry")
+  src=$(_src "$entry") tgt=$(_tgt "$entry")
+
+  mkdir -p "$(dirname "$tgt")"
+
+  if [[ -L "$tgt" ]]; then
+    local current
+    current=$(readlink "$tgt")
+    if _same_path "$current" "$src"; then
+      skip "${name} already linked"
+      return
+    fi
+    if [[ "$force" == true ]]; then
+      rm "$tgt"
+    else
+      warn "${name} linked elsewhere ${D}($current)${N}"
+      return
+    fi
+  elif [[ -e "$tgt" ]]; then
+    if [[ "$force" == true ]]; then
+      rm -rf "$tgt"
+    else
+      warn "${name} exists at ${D}$tgt${N} (run ${W}ncan backup $id${N} first, or use ${W}-f${N})"
+      return
+    fi
+  fi
+
+  ln -s "$src" "$tgt"
+  ok "${name} ${D}${tgt}${N}"
+}
+
+do_link() {
+  local filter="$1" force="$2"
+
+  hdr "Linking configurations"
+  _each "$filter" _link_one "$force"
+
+  if [[ -z "$filter" ]]; then
+    hdr "Linking utilities"
+    for entry in "${UTILS[@]}"; do
+      local name src tgt
+      name=$(_name "$entry") src=$(_src "$entry") tgt=$(_tgt "$entry")
+      mkdir -p "$(dirname "$tgt")"
+
+      if [[ -L "$tgt" ]]; then
+        local current
+        current=$(readlink "$tgt")
+        if _same_path "$current" "$src"; then
+          skip "${name} already linked"
+        elif [[ "$force" == true ]]; then
+          rm "$tgt" && ln -s "$src" "$tgt" && ok "${name} ${D}${tgt}${N}"
+        else
+          warn "${name} linked elsewhere ${D}($current)${N}"
+        fi
+      elif [[ -e "$tgt" ]]; then
+        warn "${name} exists as regular file"
+      else
+        ln -s "$src" "$tgt" 2>/dev/null && ok "${name} ${D}${tgt}${N}" \
+          || warn "${name} failed — may need ${W}sudo${N} for ${D}$tgt${N}"
+      fi
+    done
+  fi
+}
+
+# ── Unlink ────────────────────────────────────────────────────────────────
+
+_unlink_one() {
+  local entry="$1"
+  local name tgt
+  name=$(_name "$entry") tgt=$(_tgt "$entry")
+
+  if [[ -L "$tgt" ]]; then
+    rm "$tgt"
+    ok "${name} unlinked"
+  elif [[ -e "$tgt" ]]; then
+    warn "${name} is not a symlink, skipping"
+  else
+    skip "${name} not present"
+  fi
+}
+
+do_unlink() {
+  local filter="$1"
+
+  if [[ -z "$filter" ]]; then
+    printf "  ${Y}Remove ALL config symlinks?${N} [y/N] "
+    read -r confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || { skip "Cancelled."; return 0; }
+  fi
+
+  hdr "Unlinking configurations"
+  _each "$filter" _unlink_one
+
+  if [[ -z "$filter" ]]; then
+    for entry in "${UTILS[@]}"; do
+      local name tgt
+      name=$(_name "$entry") tgt=$(_tgt "$entry")
+      if [[ -L "$tgt" ]]; then
+        rm "$tgt" 2>/dev/null && ok "${name} unlinked" \
+          || warn "${name} needs ${W}sudo${N}"
+      fi
+    done
+  fi
+}
+
+# ── Backup ────────────────────────────────────────────────────────────────
+
+_backup_one() {
+  local entry="$1"
+  local name tgt bak type
+  name=$(_name "$entry") tgt=$(_tgt "$entry") bak=$(_bak "$entry") type=$(_type "$entry")
+
+  if [[ -L "$tgt" ]]; then
+    skip "${name} is a symlink, nothing to backup"
+    return
+  fi
+
+  if { [[ "$type" == "file" ]] && [[ -f "$tgt" ]]; } || \
+     { [[ "$type" == "dir" ]]  && [[ -d "$tgt" ]]; }; then
+    cp -r "$tgt" "$bak"
+    ok "${name} ${D}${bak}${N}"
+  else
+    skip "${name} not present"
+  fi
+}
+
+do_backup() {
+  hdr "Backing up configurations"
+  _each "${1:-}" _backup_one
+}
+
+# ── Restore ───────────────────────────────────────────────────────────────
+
+_restore_one() {
+  local entry="$1"
+  local name tgt bak type
+  name=$(_name "$entry") tgt=$(_tgt "$entry") bak=$(_bak "$entry") type=$(_type "$entry")
+
+  if { [[ "$type" == "file" ]] && [[ -f "$bak" ]]; } || \
+     { [[ "$type" == "dir" ]]  && [[ -d "$bak" ]]; }; then
+    [[ -L "$tgt" ]] && rm "$tgt"
+    [[ "$type" == "dir" && -d "$tgt" ]] && rm -rf "$tgt"
+    cp -r "$bak" "$tgt"
+    ok "${name} restored"
+  else
+    skip "${name} no backup found"
+  fi
+}
+
+do_restore() {
+  hdr "Restoring configurations"
+  _each "${1:-}" _restore_one
+}
+
+# ── Purge ─────────────────────────────────────────────────────────────────
+
+_purge_one() {
+  local entry="$1"
+  local name bak
+  name=$(_name "$entry") bak=$(_bak "$entry")
+
+  if [[ -e "$bak" ]]; then
+    rm -rf "$bak"
+    ok "${name} backup removed"
+  else
+    skip "${name} no backup"
+  fi
+}
+
+do_purge() {
+  hdr "Purging backups"
+  _each "${1:-}" _purge_one
+}
+
+# ── Status ────────────────────────────────────────────────────────────────
+
+do_status() {
+  hdr "Configurations"
+  for entry in "${APPS[@]}"; do
+    local name src tgt padded
+    name=$(_name "$entry") src=$(_src "$entry") tgt=$(_tgt "$entry")
+    padded=$(printf "%-14s" "$name")
+
+    if [[ -L "$tgt" ]]; then
+      local current
+      current=$(readlink "$tgt")
+      if _same_path "$current" "$src"; then
+        printf "  ${G}●${N} ${padded} ${G}linked${N}      ${D}%s${N}\n" "$tgt"
+      else
+        printf "  ${Y}●${N} ${padded} ${Y}mislinked${N}   ${D}%s${N}\n" "$tgt"
+      fi
+    elif [[ -e "$tgt" ]]; then
+      printf "  ${Y}○${N} ${padded} ${Y}unmanaged${N}   ${D}%s${N}\n" "$tgt"
+    else
+      printf "  ${R}○${N} ${padded} ${D}absent${N}      ${D}%s${N}\n" "$tgt"
+    fi
+  done
+
+  hdr "Services"
+  for entry in "${SERVICES[@]}"; do
+    local proc label padded
+    proc=$(_id "$entry") label=$(_name "$entry")
+    padded=$(printf "%-14s" "$label")
+    if pgrep -x "$proc" >/dev/null 2>&1; then
+      local pid
+      pid=$(pgrep -x "$proc" | head -1)
+      printf "  ${G}●${N} ${padded} ${G}running${N}     ${D}pid %s${N}\n" "$pid"
+    else
+      printf "  ${R}○${N} ${padded} ${D}stopped${N}\n"
+    fi
+  done
+
+  hdr "Dependencies"
+  local line="  " count=0
+  for entry in "${DEPS[@]}"; do
+    local cmd label
+    cmd=$(_id "$entry") label=$(_name "$entry")
+    if command -v "$cmd" >/dev/null 2>&1; then
+      line+="${G}●${N} ${label}  "
+    else
+      line+="${R}○${N} ${label}  "
+    fi
+    count=$((count + 1))
+    if (( count % 5 == 0 )); then
+      printf "%b\n" "$line"
+      line="  "
+    fi
+  done
+  [[ "$line" != "  " ]] && printf "%b\n" "$line"
+  echo ""
+}
+
+# ── Setup ─────────────────────────────────────────────────────────────────
+
+do_setup() {
+  local cask_flag="${1:-}"
+
+  printf "\n  ${W}ncan${N} ${D}·${N} full system setup\n"
+
+  printf "\n  ${W}[1/4]${N} Installing packages\n"
+  "$NCAN_DIR/scripts/brew.sh" $cask_flag
+
+  printf "\n  ${W}[2/4]${N} Installing shell dependencies\n"
+  "$NCAN_DIR/scripts/install.sh"
+
+  printf "\n  ${W}[3/4]${N} Backing up existing configs\n"
+  do_backup ""
+
+  printf "\n  ${W}[4/4]${N} Linking configurations\n"
+  do_link "" "true"
+
+  do_status
+  ok "Setup complete"
+}
+
+# ── Help ──────────────────────────────────────────────────────────────────
+
+do_help() {
+  cat <<EOF
+
+  $(printf "${W}ncan${N} ${D}·${N} dotfiles manager")
+
+  $(printf "${W}usage${N}  ncan ${C}<command>${N} ${D}[app] [flags]${N}")
+
+  $(printf "${W}commands${N}")
+    $(printf "${C}link${N}    ${D}[app] [-f]${N}        Symlink configs to system paths")
+    $(printf "${C}unlink${N}  ${D}[app]${N}             Remove config symlinks")
+    $(printf "${C}backup${N}  ${D}[app]${N}             Backup existing configs before linking")
+    $(printf "${C}restore${N} ${D}[app]${N}             Restore configs from backups")
+    $(printf "${C}purge${N}   ${D}[app]${N}             Remove backup files")
+    $(printf "${C}brew${N}    ${D}[--with-casks]${N}    Install Homebrew packages")
+    $(printf "${C}install${N}                   Install shell deps ${D}(omz, tpm)${N}")
+    $(printf "${C}setup${N}   ${D}[--with-casks]${N}    Full first-time setup")
+    $(printf "${C}status${N}                    Show system health")
+
+  $(printf "${W}apps${N}")
+    $(for entry in "${APPS[@]}"; do printf "${C}%s${N}  " "$(_id "$entry")"; done)
+
+  $(printf "${W}examples${N}")
+    $(printf "${D}\$${N} ncan link                ${D}# link all configs${N}")
+    $(printf "${D}\$${N} ncan link nvim           ${D}# link only neovim${N}")
+    $(printf "${D}\$${N} ncan backup ghostty      ${D}# backup ghostty before changes${N}")
+    $(printf "${D}\$${N} ncan unlink tmux         ${D}# remove just tmux symlink${N}")
+    $(printf "${D}\$${N} ncan setup --with-casks   ${D}# full setup with GUI apps${N}")
+
+EOF
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────
+
+cmd="${1:-}"
+shift 2>/dev/null || true
+
+case "$cmd" in
+  link)
+    app="" force=false
+    for arg in "$@"; do
+      case "$arg" in
+        -f|--force) force=true ;;
+        *) app="$arg" ;;
+      esac
+    done
+    do_link "$app" "$force"
+    ;;
+  unlink)     do_unlink "${1:-}" ;;
+  backup)     do_backup "${1:-}" ;;
+  restore)    do_restore "${1:-}" ;;
+  purge)      do_purge "${1:-}" ;;
+  brew)       "$NCAN_DIR/scripts/brew.sh" "$@" ;;
+  install)    "$NCAN_DIR/scripts/install.sh" ;;
+  setup)      do_setup "${1:-}" ;;
+  status)     do_status ;;
+  help|-h|--help) do_help ;;
+  "")
+    printf "\n  ${Y}No command specified.${N} Run ${W}ncan help${N} for usage.\n\n"
+    exit 1
+    ;;
+  *)
+    err "Unknown command: ${W}$cmd${N}"
+    printf "  Run ${W}ncan help${N} for usage.\n"
+    exit 1
+    ;;
+esac

@@ -57,5 +57,3 @@
 	
 	# Show word diff
 	wdiff = diff --color-words
-[core]
-	hooksPath = /dev/null

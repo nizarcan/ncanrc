@@ -129,7 +129,12 @@ alias vim="nvim" # since I don't know how to exit vim, I use nvim instead
 # ====================================
 # Optional configurations
 # ====================================
-DOTFILES_DIR="$HOME/projects/personal/ncanrc"
+# Auto-detect dotfiles dir from symlinked zshrc, fallback to default
+if [[ -L "$HOME/.zshrc" ]]; then
+    DOTFILES_DIR="$(cd "$(dirname "$(readlink "$HOME/.zshrc")")/../.." && pwd)"
+else
+    DOTFILES_DIR="${DOTFILES_DIR:-$HOME/projects/personal/ncanrc}"
+fi
 [[ -f "$DOTFILES_DIR/utilities/personal/personal.sh" ]] && source "$DOTFILES_DIR/utilities/personal/personal.sh"
 [[ -f "$DOTFILES_DIR/utilities/work/work.sh" ]] && source "$DOTFILES_DIR/utilities/work/work.sh"
 
