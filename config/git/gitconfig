@@ -5,11 +5,20 @@
 	autoSetupRemote = true
 [alias]
 	logbetween = log --pretty=format:\"%h %ar %an %s\"
+
+    # `git log` with patches shown with difftastic.
+    dl = -c diff.external=difft log -p --ext-diff
+    # Show the most recent commit with difftastic.
+    ds = -c diff.external=difft show --ext-diff
+    # `git diff` with difftastic.
+    dft = -c diff.external=difft diff
 	
 	# Quick shortcuts
 	co = checkout
 	br = branch
 	ci = commit
+	cnv = commit --no-verify
+	pnv = push --no-verify
 	st = status
 	unstage = reset HEAD --
 	last = log -1 HEAD
@@ -48,3 +57,5 @@
 	
 	# Show word diff
 	wdiff = diff --color-words
+[core]
+	hooksPath = /dev/null
