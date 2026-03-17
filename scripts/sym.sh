@@ -60,6 +60,7 @@ create_symlink "$(pwd)/config/ghostty" "$HOME/.config/ghostty" "Ghostty" "dir"
 create_symlink "$(pwd)/config/git/gitconfig" "$HOME/.gitconfig" "Git" "file"
 create_symlink "$(pwd)/config/aerospace/aerospace.toml" "$HOME/.aerospace.toml" "Aerospace" "file"
 create_symlink "$(pwd)/config/sketchybar" "$HOME/.config/sketchybar" "SketchyBar" "dir"
+create_symlink "$(pwd)/config/skhd/skhdrc" "$HOME/.skhdrc" "skhd" "file"
 
 # Utility script symlinks
 create_utility_symlink "$(pwd)/utilities/tmux/tmux-session.sh" "/usr/local/bin/tmux-session" "Tmux session script"

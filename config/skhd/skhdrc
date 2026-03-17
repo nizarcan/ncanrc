@@ -1,0 +1,43 @@
+# ============================================
+# skhd - Global Hotkeys
+# ============================================
+# These complement AeroSpace bindings.
+# AeroSpace handles: window focus, move, resize, workspace switching
+# skhd handles: app launching, system shortcuts, utilities
+
+# ============================================
+# App Launchers (hyper = cmd + alt + ctrl + shift)
+# ============================================
+cmd + alt - return : open -na "Ghostty"
+cmd + alt - b : open -a "Arc"
+cmd + alt - s : open -a "Slack"
+cmd + alt - f : open -a "Finder"
+cmd + alt - n : open -a "Obsidian"
+cmd + alt - m : open -a "Spotify"
+
+# ============================================
+# Quick Utilities
+# ============================================
+
+# Screenshot to clipboard
+cmd + shift - 3 : screencapture -c -x ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png
+
+# Toggle Do Not Disturb (Focus mode)
+cmd + alt - d : shortcuts run "Toggle Focus"
+
+# Lock screen
+cmd + alt - l : pmset displaysleepnow
+
+# ============================================
+# SketchyBar Integration
+# ============================================
+
+# Refresh sketchybar
+cmd + alt - r : sketchybar --update
+
+# ============================================
+# Media Controls (fn key alternatives)
+# ============================================
+cmd + alt - p : osascript -e 'tell application "Spotify" to playpause'
+cmd + alt - 0x1E : osascript -e 'tell application "Spotify" to next track'
+cmd + alt - 0x21 : osascript -e 'tell application "Spotify" to previous track'
