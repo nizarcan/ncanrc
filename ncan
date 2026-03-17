@@ -53,6 +53,13 @@ DEPS=(
   "bun|bun"
 )
 
+# id|display|path  — zsh utility submodules
+SUBMODULES=(
+  "work|work|utilities/work"
+  "personal|personal|utilities/personal"
+  "nvim|neovim|config/nvim"
+)
+
 # process_name|display  — used by `status`
 SERVICES=(
   "sketchybar|sketchybar"
@@ -288,6 +295,87 @@ do_purge() {
   _each "${1:-}" _purge_one
 }
 
+# ── Utils (submodule management) ──────────────────────────────────────────
+
+_sub_path() { echo "$1" | cut -d'|' -f3; }
+
+do_utils() {
+  local action="${1:-}" filter="${2:-}"
+
+  case "$action" in
+    init)
+      hdr "Initializing submodules"
+      for entry in "${SUBMODULES[@]}"; do
+        local id label path
+        id=$(_id "$entry") label=$(_name "$entry") path=$(_sub_path "$entry")
+        [[ -n "$filter" && "$id" != "$filter" ]] && continue
+
+        if [[ -f "$NCAN_DIR/$path/.git" || -d "$NCAN_DIR/$path/.git" ]] && [[ -n "$(ls -A "$NCAN_DIR/$path" 2>/dev/null)" ]]; then
+          skip "${label} already initialized"
+        else
+          git -C "$NCAN_DIR" submodule update --init "$path" 2>/dev/null \
+            && ok "${label} ${D}$path${N}" \
+            || err "${label} failed to initialize"
+        fi
+      done
+      ;;
+    pull)
+      hdr "Pulling submodules"
+      for entry in "${SUBMODULES[@]}"; do
+        local id label path
+        id=$(_id "$entry") label=$(_name "$entry") path=$(_sub_path "$entry")
+        [[ -n "$filter" && "$id" != "$filter" ]] && continue
+
+        if [[ ! -f "$NCAN_DIR/$path/.git" && ! -d "$NCAN_DIR/$path/.git" ]]; then
+          warn "${label} not initialized (run ${W}ncan utils init $id${N})"
+        else
+          git -C "$NCAN_DIR/$path" pull --ff-only 2>/dev/null \
+            && ok "${label} pulled" \
+            || warn "${label} pull failed (check for local changes)"
+        fi
+      done
+      ;;
+    push)
+      hdr "Pushing submodules"
+      for entry in "${SUBMODULES[@]}"; do
+        local id label path
+        id=$(_id "$entry") label=$(_name "$entry") path=$(_sub_path "$entry")
+        [[ -n "$filter" && "$id" != "$filter" ]] && continue
+
+        if [[ ! -f "$NCAN_DIR/$path/.git" && ! -d "$NCAN_DIR/$path/.git" ]]; then
+          warn "${label} not initialized (run ${W}ncan utils init $id${N})"
+        else
+          git -C "$NCAN_DIR/$path" push 2>/dev/null \
+            && ok "${label} pushed" \
+            || warn "${label} push failed"
+        fi
+      done
+      ;;
+    ""|status)
+      hdr "Submodules"
+      for entry in "${SUBMODULES[@]}"; do
+        local label path padded
+        label=$(_name "$entry") path=$(_sub_path "$entry")
+        padded=$(printf "%-14s" "$label")
+
+        if [[ ! -f "$NCAN_DIR/$path/.git" && ! -d "$NCAN_DIR/$path/.git" ]] || [[ -z "$(ls -A "$NCAN_DIR/$path" 2>/dev/null)" ]]; then
+          printf "  ${R}○${N} ${padded} ${D}not initialized${N}\n"
+        else
+          local branch sha
+          branch=$(git -C "$NCAN_DIR/$path" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+          sha=$(git -C "$NCAN_DIR/$path" rev-parse --short HEAD 2>/dev/null || echo "?")
+          printf "  ${G}●${N} ${padded} ${G}${branch}${N}  ${D}${sha}  ${path}${N}\n"
+        fi
+      done
+      ;;
+    *)
+      err "Unknown utils action: ${W}$action${N}"
+      printf "  Usage: ncan utils ${C}[init|pull|push|status]${N} ${D}[work|personal|nvim]${N}\n"
+      return 1
+      ;;
+  esac
+}
+
 # ── Status ────────────────────────────────────────────────────────────────
 
 do_status() {
@@ -309,6 +397,22 @@ do_status() {
       printf "  ${Y}○${N} ${padded} ${Y}unmanaged${N}   ${D}%s${N}\n" "$tgt"
     else
       printf "  ${R}○${N} ${padded} ${D}absent${N}      ${D}%s${N}\n" "$tgt"
+    fi
+  done
+
+  hdr "Submodules"
+  for entry in "${SUBMODULES[@]}"; do
+    local label path padded
+    label=$(_name "$entry") path=$(_sub_path "$entry")
+    padded=$(printf "%-14s" "$label")
+
+    if [[ ! -f "$NCAN_DIR/$path/.git" && ! -d "$NCAN_DIR/$path/.git" ]] || [[ -z "$(ls -A "$NCAN_DIR/$path" 2>/dev/null)" ]]; then
+      printf "  ${R}○${N} ${padded} ${D}not initialized${N}\n"
+    else
+      local branch sha
+      branch=$(git -C "$NCAN_DIR/$path" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+      sha=$(git -C "$NCAN_DIR/$path" rev-parse --short HEAD 2>/dev/null || echo "?")
+      printf "  ${G}●${N} ${padded} ${G}${branch}${N}  ${D}${sha}  ${path}${N}\n"
     fi
   done
 
@@ -387,6 +491,7 @@ do_help() {
     $(printf "${C}brew${N}    ${D}[--with-casks]${N}    Install Homebrew packages")
     $(printf "${C}install${N}                   Install shell deps ${D}(omz, tpm)${N}")
     $(printf "${C}setup${N}   ${D}[--with-casks]${N}    Full first-time setup")
+    $(printf "${C}utils${N}   ${D}[action] [name]${N}   Manage submodules ${D}(init, pull, push, status)${N}")
     $(printf "${C}status${N}                    Show system health")
 
   $(printf "${W}apps${N}")
@@ -397,6 +502,9 @@ do_help() {
     $(printf "${D}\$${N} ncan link nvim           ${D}# link only neovim${N}")
     $(printf "${D}\$${N} ncan backup ghostty      ${D}# backup ghostty before changes${N}")
     $(printf "${D}\$${N} ncan unlink tmux         ${D}# remove just tmux symlink${N}")
+    $(printf "${D}\$${N} ncan utils init work     ${D}# init work zsh utilities${N}")
+    $(printf "${D}\$${N} ncan utils pull          ${D}# pull latest for all submodules${N}")
+    $(printf "${D}\$${N} ncan utils push work     ${D}# push work submodule${N}")
     $(printf "${D}\$${N} ncan setup --with-casks   ${D}# full setup with GUI apps${N}")
 
 EOF
@@ -424,6 +532,7 @@ case "$cmd" in
   purge)      do_purge "${1:-}" ;;
   brew)       "$NCAN_DIR/scripts/brew.sh" "$@" ;;
   install)    "$NCAN_DIR/scripts/install.sh" ;;
+  utils)      do_utils "${1:-}" "${2:-}" ;;
   setup)      do_setup "${1:-}" ;;
   status)     do_status ;;
   help|-h|--help) do_help ;;
