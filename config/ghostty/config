@@ -27,5 +27,8 @@ macos-icon-frame = beige
 macos-icon-ghost-color = efbcd5
 macos-icon-screen-color = 403f4c 
 
-theme = Nvim Dark
+background-opacity = 0.85
+background-blur-radius = 20
+
+theme = Dark+
 keybind = shift+enter=text:\n

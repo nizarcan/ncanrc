@@ -3,6 +3,9 @@ set -eo pipefail
 
 G='\033[0;32m' Y='\033[1;33m' W='\033[1;37m' D='\033[0;90m' N='\033[0m'
 
+NCAN_PLATFORM="${NCAN_PLATFORM:-macos}"
+NCAN_MODE="${NCAN_MODE:-desktop}"
+
 ok()   { printf "  ${G}✓${N} %s\n" "$1"; }
 warn() { printf "  ${Y}!${N} %s\n" "$1"; }
 info() { printf "  ${D}·${N} %s\n" "$1"; }
@@ -53,7 +56,7 @@ install_languages() {
 
 install_tools() {
   printf "\n  ${W}CLI Tools${N}\n"
-  local pkgs=(tree fzf ripgrep jq neovim tmux httpie difftastic)
+  local pkgs=(tree fzf ripgrep jq neovim tmux httpie difftastic starship)
   for pkg in "${pkgs[@]}"; do _install "$pkg"; done
 }
 
@@ -98,9 +101,18 @@ printf "\n  ${W}Homebrew Packages${N}\n"
 install_homebrew
 install_languages
 install_tools
-install_services
 
-if [[ "$INSTALL_CASKS" == true ]]; then
+if [[ "$NCAN_PLATFORM" == "macos" ]]; then
+  install_services
+else
+  info "Skipping macOS services (not on macOS)"
+fi
+
+if [[ "$NCAN_MODE" == "server" ]]; then
+  info "Skipping GUI apps (server mode)"
+elif [[ "$NCAN_PLATFORM" != "macos" ]]; then
+  info "Skipping GUI apps (casks not available on Linux)"
+elif [[ "$INSTALL_CASKS" == true ]]; then
   install_casks
 else
   info "Skipping GUI apps (use --with-casks)"

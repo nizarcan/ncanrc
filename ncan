@@ -15,42 +15,53 @@ err()  { printf "  ${R}✗${N} %b\n" "$1"; }
 die()  { err "$1"; exit 1; }
 hdr()  { printf "\n  ${W}%s${N}\n" "$1"; }
 
+# ── Platform Detection ───────────────────────────────────────────────
+NCAN_PLATFORM="unknown"
+NCAN_MODE="desktop"
+
+case "$(uname -s)" in
+  Darwin) NCAN_PLATFORM="macos" ;;
+  Linux)  NCAN_PLATFORM="linux" ;;
+esac
+
 # ── App Registry ──────────────────────────────────────────────────────────
-# id|display|source_relative|target|type
+# id|display|source_relative|target|type|platform
 APPS=(
-  "nvim|Neovim|config/nvim|$HOME/.config/nvim|dir"
-  "tmux|Tmux|config/tmux/tmux.conf|$HOME/.tmux.conf|file"
-  "zsh|Zsh|config/zsh/zshrc|$HOME/.zshrc|file"
-  "alacritty|Alacritty|config/alacritty|$HOME/.config/alacritty|dir"
-  "ghostty|Ghostty|config/ghostty|$HOME/.config/ghostty|dir"
-  "git|Git|config/git/gitconfig|$HOME/.gitconfig|file"
-  "aerospace|Aerospace|config/aerospace/aerospace.toml|$HOME/.aerospace.toml|file"
-  "sketchybar|SketchyBar|config/sketchybar|$HOME/.config/sketchybar|dir"
-  "skhd|skhd|config/skhd/skhdrc|$HOME/.skhdrc|file"
+  "nvim|Neovim|config/nvim|$HOME/.config/nvim|dir|all"
+  "tmux|Tmux|config/tmux/tmux.conf|$HOME/.tmux.conf|file|all"
+  "zsh|Zsh|config/zsh/zshrc|$HOME/.zshrc|file|all"
+  "alacritty|Alacritty|config/alacritty|$HOME/.config/alacritty|dir|desktop"
+  "ghostty|Ghostty|config/ghostty|$HOME/.config/ghostty|dir|desktop"
+  "git|Git|config/git/gitconfig|$HOME/.gitconfig|file|all"
+  "aerospace|Aerospace|config/aerospace/aerospace.toml|$HOME/.aerospace.toml|file|macos"
+  "sketchybar|SketchyBar|config/sketchybar|$HOME/.config/sketchybar|dir|macos"
+  "skhd|skhd|config/skhd/skhdrc|$HOME/.skhdrc|file|macos"
+  "starship|Starship|config/starship/starship.toml|$HOME/.config/starship.toml|file|all"
 )
 
 UTILS=(
-  "tmux-session|tmux-session|utilities/tmux/tmux-session.sh|/usr/local/bin/tmux-session|file"
+  "tmux-session|tmux-session|utilities/tmux/tmux-session.sh|/usr/local/bin/tmux-session|file|all"
 )
 
-# cmd|display  — used by `status` and `brew.sh`
+# cmd|display|platform  — used by `status` and `brew.sh`
 DEPS=(
-  "brew|homebrew"
-  "nvim|neovim"
-  "tmux|tmux"
-  "fzf|fzf"
-  "rg|ripgrep"
-  "jq|jq"
-  "node|node"
-  "go|go"
-  "git|git"
-  "difft|difftastic"
-  "python3|python"
-  "rustc|rust"
-  "tsc|typescript"
-  "http|httpie"
-  "tree|tree"
-  "bun|bun"
+  "brew|homebrew|all"
+  "nvim|neovim|all"
+  "tmux|tmux|all"
+  "fzf|fzf|all"
+  "rg|ripgrep|all"
+  "jq|jq|all"
+  "node|node|all"
+  "go|go|all"
+  "git|git|all"
+  "difft|difftastic|all"
+  "python3|python|all"
+  "rustc|rust|all"
+  "tsc|typescript|all"
+  "http|httpie|all"
+  "tree|tree|all"
+  "bun|bun|all"
+  "starship|starship|all"
 )
 
 # id|display|path  — zsh utility submodules
@@ -60,12 +71,50 @@ SUBMODULES=(
   "nvim|neovim|config/nvim"
 )
 
-# process_name|display  — used by `status`
+# process_name|display|platform  — used by `status`
 SERVICES=(
-  "sketchybar|sketchybar"
-  "skhd|skhd"
-  "AeroSpace|aerospace"
+  "sketchybar|sketchybar|macos"
+  "skhd|skhd|macos"
+  "AeroSpace|aerospace|macos"
 )
+
+# ── Platform filtering ────────────────────────────────────────────────────
+
+_should_include() {
+  local tag="$1"
+  case "$tag" in
+    all)     return 0 ;;
+    desktop) [[ "$NCAN_MODE" != "server" ]] ;;
+    macos)   [[ "$NCAN_PLATFORM" == "macos" ]] ;;
+    *)       return 1 ;;
+  esac
+}
+
+_filter_registries() {
+  local filtered=()
+  for entry in "${APPS[@]}"; do
+    _should_include "$(echo "$entry" | cut -d'|' -f6)" && filtered+=("$entry")
+  done
+  APPS=("${filtered[@]}")
+
+  filtered=()
+  for entry in "${UTILS[@]}"; do
+    _should_include "$(echo "$entry" | cut -d'|' -f6)" && filtered+=("$entry")
+  done
+  UTILS=("${filtered[@]}")
+
+  filtered=()
+  for entry in "${DEPS[@]}"; do
+    _should_include "$(echo "$entry" | cut -d'|' -f3)" && filtered+=("$entry")
+  done
+  DEPS=("${filtered[@]}")
+
+  filtered=()
+  for entry in "${SERVICES[@]}"; do
+    _should_include "$(echo "$entry" | cut -d'|' -f3)" && filtered+=("$entry")
+  done
+  SERVICES=("${filtered[@]}")
+}
 
 # ── Registry helpers ──────────────────────────────────────────────────────
 _id()   { echo "${1%%|*}"; }
@@ -379,6 +428,10 @@ do_utils() {
 # ── Status ────────────────────────────────────────────────────────────────
 
 do_status() {
+  printf "\n  ${W}ncan${N} ${D}·${N} ${C}%s${N}" "$NCAN_PLATFORM"
+  [[ "$NCAN_MODE" == "server" ]] && printf " ${D}(server)${N}"
+  printf "\n"
+
   hdr "Configurations"
   for entry in "${APPS[@]}"; do
     local name src tgt padded
@@ -480,7 +533,7 @@ do_help() {
 
   $(printf "${W}ncan${N} ${D}·${N} dotfiles manager")
 
-  $(printf "${W}usage${N}  ncan ${C}<command>${N} ${D}[app] [flags]${N}")
+  $(printf "${W}usage${N}  ncan ${D}[--server] [--platform=TYPE]${N} ${C}<command>${N} ${D}[app] [flags]${N}")
 
   $(printf "${W}commands${N}")
     $(printf "${C}link${N}    ${D}[app] [-f]${N}        Symlink configs to system paths")
@@ -494,7 +547,11 @@ do_help() {
     $(printf "${C}utils${N}   ${D}[action] [name]${N}   Manage submodules ${D}(init, pull, push, status)${N}")
     $(printf "${C}status${N}                    Show system health")
 
-  $(printf "${W}apps${N}")
+  $(printf "${W}global flags${N}")
+    $(printf "${D}--server${N}              Server mode ${D}(skip GUI apps)${N}")
+    $(printf "${D}--platform=TYPE${N}       Override detection ${D}(macos, linux)${N}")
+
+  $(printf "${W}apps${N} ${D}(%s %s)${N}" "$NCAN_PLATFORM" "$NCAN_MODE")
     $(for entry in "${APPS[@]}"; do printf "${C}%s${N}  " "$(_id "$entry")"; done)
 
   $(printf "${W}examples${N}")
@@ -511,6 +568,17 @@ EOF
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────
+
+while [[ "${1:-}" == --* ]]; do
+  case "$1" in
+    --server)     NCAN_MODE="server"; shift ;;
+    --platform=*) NCAN_PLATFORM="${1#--platform=}"; shift ;;
+    *)            break ;;
+  esac
+done
+export NCAN_PLATFORM NCAN_MODE
+
+_filter_registries
 
 cmd="${1:-}"
 shift 2>/dev/null || true
