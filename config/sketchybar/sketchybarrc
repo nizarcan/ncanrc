@@ -54,12 +54,13 @@ sketchybar --add item mode center \
            label.color=0xffff6666 \
            script="$PLUGIN_DIR/mode.sh"
 
-##### Right Items #####
-sketchybar --add item clock right \
+##### Center - Clock #####
+sketchybar --add item clock center \
            --set clock update_freq=10 \
                        icon="" \
                        script="$PLUGIN_DIR/clock.sh"
 
+##### Right Items #####
 sketchybar --add item battery right \
            --set battery update_freq=120 \
                          script="$PLUGIN_DIR/battery.sh" \
