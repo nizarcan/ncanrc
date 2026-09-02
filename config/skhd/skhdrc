@@ -38,3 +38,10 @@ cmd + alt - r : sketchybar --update
 cmd + alt - p : osascript -e 'tell application "Spotify" to playpause'
 cmd + alt - 0x1E : osascript -e 'tell application "Spotify" to next track'
 cmd + alt - 0x21 : osascript -e 'tell application "Spotify" to previous track'
+
+# Volume controls
+cmd + alt - 0x18 : osascript -e 'set volume output volume ((output volume of (get volume settings)) + 5)'
+cmd + alt - 0x1B : osascript -e 'set volume output volume ((output volume of (get volume settings)) - 5)'
+
+# Cycle audio output device
+alt + shift - 0x1B : dev=$(SwitchAudioSource -t output -n) && sketchybar --trigger audio_output_change && osascript -e "display notification \"$dev\" with title \"Audio Output\""

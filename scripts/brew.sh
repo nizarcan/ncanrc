@@ -68,7 +68,7 @@ install_services() {
     brew tap "$tap" 2>/dev/null || true
   done
 
-  for pkg in sketchybar skhd borders; do _install "$pkg"; done
+  for pkg in sketchybar skhd borders switchaudio-osx; do _install "$pkg"; done
   _install_cask "aerospace"
 }
 

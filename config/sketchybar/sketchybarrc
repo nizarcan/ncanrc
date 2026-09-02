@@ -22,6 +22,7 @@ sketchybar --default "${default[@]}"
 ##### Aerospace Workspace Indicators #####
 sketchybar --add event aerospace_workspace_change
 sketchybar --add event aerospace_mode_change
+sketchybar --add event audio_output_change
 
 for sid in $(aerospace list-workspaces --all); do
     sketchybar --add item space.$sid left \
@@ -66,7 +67,7 @@ sketchybar --add item battery right \
 
 sketchybar --add item volume right \
            --set volume script="$PLUGIN_DIR/volume.sh" \
-           --subscribe volume volume_change
+           --subscribe volume volume_change audio_output_change
 
 sketchybar --add item ram right \
            --set ram update_freq=10 \

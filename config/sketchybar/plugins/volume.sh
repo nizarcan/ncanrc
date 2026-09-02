@@ -1,20 +1,21 @@
 #!/bin/sh
 
-# The volume_change event supplies a $INFO variable in which the current volume
-# percentage is passed to the script.
+# Runs on volume_change (INFO = volume %) and audio_output_change (cycled device).
+# Query the system directly so the label is correct regardless of sender.
 
-if [ "$SENDER" = "volume_change" ]; then
-  VOLUME="$INFO"
+VOLUME=$(osascript -e 'output volume of (get volume settings)' 2>/dev/null)
+DEVICE=$(SwitchAudioSource -c -t output 2>/dev/null | tr '[:upper:]' '[:lower:]')
 
-  case "$VOLUME" in
-    [6-9][0-9]|100) ICON="󰕾"
-    ;;
-    [3-5][0-9]) ICON="󰖀"
-    ;;
-    [1-9]|[1-2][0-9]) ICON="󰕿"
-    ;;
-    *) ICON="󰖁"
-  esac
+case "$VOLUME" in
+  [6-9][0-9]|100) ICON="󰕾"; LABEL="$DEVICE  $VOLUME%"
+  ;;
+  [3-5][0-9]) ICON="󰖀"; LABEL="$DEVICE  $VOLUME%"
+  ;;
+  [1-9]|[1-2][0-9]) ICON="󰕿"; LABEL="$DEVICE  $VOLUME%"
+  ;;
+  0) ICON="󰖁"; LABEL="$DEVICE  $VOLUME%"
+  ;;
+  *) ICON="󰕾"; LABEL="$DEVICE"  # non-adjustable device (no software volume)
+esac
 
-  sketchybar --set "$NAME" icon="$ICON" label="$VOLUME%"
-fi
+sketchybar --set "$NAME" icon="$ICON" label="$LABEL"
