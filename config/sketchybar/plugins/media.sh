@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if ! pgrep -x "Spotify" >/dev/null 2>&1; then
+    sketchybar --set "$NAME" drawing=off
+    exit 0
+fi
+
 PLAYER_STATE=$(osascript -e 'tell application "Spotify" to player state as string' 2>/dev/null)
 
 if [[ "$PLAYER_STATE" == "playing" ]]; then
