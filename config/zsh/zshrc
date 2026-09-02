@@ -54,10 +54,10 @@ export PATH="$HOME/.local/bin:$PATH"
 
 if [[ "$PLATFORM" == "macos" ]]; then
     export HOMEBREW_PREFIX="/opt/homebrew"
-    
+
     if [[ -n "$HOMEBREW_PREFIX" ]]; then
         export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:$PATH"
-        
+
         if [[ -d "$HOMEBREW_PREFIX/opt/ruby/bin" ]]; then
             export PATH="$HOMEBREW_PREFIX/opt/ruby/bin:$PATH"
         fi
@@ -78,20 +78,20 @@ elif [[ "$PLATFORM" == "linux" ]]; then
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
         export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
     fi
-    
+
     export PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-    
+
     if [[ -n "$HOMEBREW_PREFIX" ]]; then
         if [[ -d "$HOMEBREW_PREFIX/opt/ruby/bin" ]]; then
             export PATH="$HOMEBREW_PREFIX/opt/ruby/bin:$PATH"
         fi
-        
+
         if [[ -d "$HOMEBREW_PREFIX/opt/openjdk@17" ]]; then
             export PATH="$HOMEBREW_PREFIX/opt/openjdk@17/bin:$PATH"
             export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk@17"
         fi
     fi
-    
+
     if [[ -z "$JAVA_HOME" ]]; then
         if [[ -d "/usr/lib/jvm/java-17-openjdk" ]]; then
             export JAVA_HOME="/usr/lib/jvm/java-17-openjdk"
@@ -118,6 +118,7 @@ bindkey -s '^v' 'source venv/bin/activate^M'
 # ====================================
 # Aliases
 # ====================================
+alias gitclean="git for-each-ref refs/heads/ --format='%(refname:short)' | grep -Ev '^(main|master|develop|production)\$' | xargs git branch -D"
 
 # Python
 alias python="python3"
@@ -139,6 +140,30 @@ fi
 [[ -f "$DOTFILES_DIR/utilities/work/work.sh" ]] && source "$DOTFILES_DIR/utilities/work/work.sh"
 
 # ====================================
+# Auto venv activation
+# ====================================
+autoload -U add-zsh-hook
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+_auto_venv() {
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        local _venv_root="${VIRTUAL_ENV:h}"
+        if [[ "$PWD/" != "$_venv_root/"* ]]; then
+            deactivate 2>/dev/null
+        fi
+    fi
+    if [[ -z "$VIRTUAL_ENV" ]]; then
+        for _venv_dir in venv .venv; do
+            if [[ -f "$PWD/$_venv_dir/bin/activate" ]]; then
+                source "$PWD/$_venv_dir/bin/activate"
+                break
+            fi
+        done
+    fi
+}
+add-zsh-hook chpwd _auto_venv
+_auto_venv
+
+# ====================================
 # Prompt — Starship
 # ====================================
 eval "$(starship init zsh)"
@@ -147,4 +172,3 @@ eval "$(starship init zsh)"
 # Performance optimizations
 # ====================================
 skip_global_compinit=1
-
