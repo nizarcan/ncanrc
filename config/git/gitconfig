@@ -4,7 +4,7 @@
 [push]
 	autoSetupRemote = true
 [alias]
-	logbetween = log --pretty=format:\"%h %ar %an %s\"
+	logbetween = log --pretty=tformat:\"%C(yellow)%h%C(reset)  │  %C(cyan)%<(14)%ar%C(reset)  │  %C(green)%<(15)%an%C(reset)  │  %s\"
 
     # `git log` with patches shown with difftastic.
     dl = -c diff.external=difft log -p --ext-diff
@@ -12,7 +12,11 @@
     ds = -c diff.external=difft show --ext-diff
     # `git diff` with difftastic.
     dft = -c diff.external=difft diff
-	
+
+    # Cleanup for non-main branches
+    cleanup = "!f() { target=\"${1:-develop}\"; git for-each-ref refs/heads/ --format='%(refname:short)' | grep -Ev '^(main|master|develop|production)$' | while read b; do mb=$(git merge-base \"$target\" \"$b\"); [ -z \"$mb\" ] && continue; tree=$(git rev-parse \"$b^{tree}\"); cmt=$(git commit-tree \"$tree\" -p \"$mb\" -m _); [ \"$(git cherry \"$target\" \"$cmt\")\" = \"- $cmt\" ] && git branch -D \"$b\"; done; }; f"
+    cleanup-dry = "!f() { target=\"${1:-develop}\"; git for-each-ref refs/heads/ --format='%(refname:short)' | grep -Ev '^(main|master|develop|production)$' | while read b; do mb=$(git merge-base \"$target\" \"$b\"); [ -z \"$mb\" ] && continue; tree=$(git rev-parse \"$b^{tree}\"); cmt=$(git commit-tree \"$tree\" -p \"$mb\" -m _); [ \"$(git cherry \"$target\" \"$cmt\")\" = \"- $cmt\" ] && echo \"would delete: $b\"; done; }; f"
+
 	# Quick shortcuts
 	co = checkout
 	br = branch
@@ -22,38 +26,39 @@
 	st = status
 	unstage = reset HEAD --
 	last = log -1 HEAD
-	
+
 	# Enhanced logging
 	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
 	lol = log --graph --decorate --pretty=oneline --abbrev-commit
 	lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
-	
+
 	# Show changes
 	changed = show --pretty=\"format:\" --name-only
-	
+
 	# Interactive rebase
 	rb = rebase -i
-	
+
 	# Quick amend
 	amend = commit --amend --no-edit
-	
+
 	# Show ignored files
 	ignored = ls-files --others --ignored --exclude-standard
-	
+
 	# Undo last commit but keep changes
 	undo = reset --soft HEAD^
-	
+
 	# Show branches sorted by date
 	recent = branch --sort=-committerdate
-	
+
 	# Clean up merged branches
 	cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop\\|production' | xargs -n 1 git branch -d"
-	
+
 	# Find commits by message
 	find = "!git log --pretty=\"format:%Cgreen%H %Cblue%s\" --name-status --grep"
-	
+
 	# Show file history
 	filelog = log -u
-	
+
 	# Show word diff
 	wdiff = diff --color-words
+	supdate = submodule update --remote
