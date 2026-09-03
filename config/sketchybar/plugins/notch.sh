@@ -10,7 +10,7 @@ BUILTIN_HEIGHT=1117
 HEIGHT=$(osascript -e 'tell application "Finder" to get bounds of window of desktop' 2>/dev/null | awk -F', ' '{print $4}')
 
 if [ "$HEIGHT" = "$BUILTIN_HEIGHT" ]; then
-  sketchybar --set "$NAME" width=200
+  sketchybar --set "$NAME" width=180
 else
   sketchybar --set "$NAME" width=0
 fi

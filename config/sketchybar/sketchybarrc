@@ -32,6 +32,7 @@ for sid in $(aerospace list-workspaces --all); do
         background.corner_radius=5 \
         background.height=20 \
         background.drawing=off \
+        icon.drawing=off \
         label="$sid" \
         label.font="JetBrainsMono Nerd Font:Bold:13.0" \
         click_script="aerospace workspace $sid" \
@@ -75,6 +76,7 @@ sketchybar --add item notch center \
 sketchybar --add item time center \
            --set time update_freq=10 \
                       icon="" \
+                      padding_right=15 \
                       script="$PLUGIN_DIR/time.sh"
 
 ##### Right Items #####
