@@ -45,8 +45,9 @@ sketchybar --add item front_app left \
                            script="$PLUGIN_DIR/front_app.sh" \
            --subscribe front_app front_app_switched aerospace_workspace_change
 
-##### Center - Mode Indicator #####
-sketchybar --add item mode center \
+##### Left - Mode Indicator #####
+# Moved off-center so the notch-split clock stays symmetric around the notch.
+sketchybar --add item mode left \
            --subscribe mode aerospace_mode_change \
            --set mode \
            label="" \
@@ -54,11 +55,27 @@ sketchybar --add item mode center \
            label.color=0xffff6666 \
            script="$PLUGIN_DIR/mode.sh"
 
-##### Center - Clock #####
-sketchybar --add item clock center \
-           --set clock update_freq=10 \
-                       icon="" \
-                       script="$PLUGIN_DIR/clock.sh"
+##### Center - Clock (split around the notch) #####
+# date  ▐ notch ▌  time  — the transparent spacer reserves the notch width on
+# the built-in display, and collapses to 0 on an external screen (clamshell) so
+# the two halves sit together. See notch.sh.
+sketchybar --add item cal center \
+           --set cal update_freq=10 \
+                     icon="" \
+                     script="$PLUGIN_DIR/date.sh"
+
+sketchybar --add item notch center \
+           --set notch width=200 \
+                       icon.drawing=off \
+                       label.drawing=off \
+                       background.drawing=off \
+                       script="$PLUGIN_DIR/notch.sh" \
+           --subscribe notch display_change space_change system_woke
+
+sketchybar --add item time center \
+           --set time update_freq=10 \
+                      icon="" \
+                      script="$PLUGIN_DIR/time.sh"
 
 ##### Right Items #####
 sketchybar --add item battery right \
