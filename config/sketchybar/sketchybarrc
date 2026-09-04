@@ -99,6 +99,11 @@ sketchybar --add item cpu right \
                      icon="󰍛" \
                      script="$PLUGIN_DIR/cpu.sh"
 
+sketchybar --add item vpn right \
+           --set vpn update_freq=30 \
+                     script="$PLUGIN_DIR/vpn.sh" \
+           --subscribe vpn system_woke
+
 sketchybar --add item media right \
            --set media update_freq=1 \
                        icon="♫" \
